@@ -32,7 +32,10 @@ Public Timeout As Long '操作等待超时秒数
 
 Private Sub Class_Initialize()  '创建类的实例时会执行
     On Error Resume Next
-    Set sckRedis = New Winsock '创建socket对象实例。这句的作用类似于把winsock控件拖放到form1窗体上。只不过现在是“引用”形式，不依赖于可视化窗体。
+    Set sckRedis = New Winsock '工程“引用”mswinsck.ocx的情况下才能使用这句创建socket对象(兼容性不好，有些系统中会报错误429。好像修复VB6控件许可证问题后再编译就可以兼容本机，但还是不兼容其它主机，原因不明。)
+    If Err.Number = 429 Then    '用set语句创建Winsock对象只适合工程“引用”mswinsck.ocx的情况，兼容性不好，易出错。
+    '    Set sckRedis = Form1.Winsock1 '把Winsock1对象拖到窗体上，代替工程引用对象的方式。
+    End If
     sckRedis.RemotePort = 6379
     sckRedis.RemoteHost = "127.0.0.1"
     Timeout = 5
@@ -65,9 +68,14 @@ Public Property Get Port() As Long
     Port = sckRedis.RemotePort
 End Property
 
+'读取连接状态
+Public Property Get State() As String
+    State = sckRedis.State
+End Property
+
 '读取最近错误消息
-Public Property Get lastError() As String
-    lastError = ErrMsg
+Public Property Get LastError() As String
+    LastError = ErrMsg
 End Property
 
 '延时等待Redis的socket任务状态变更
@@ -80,8 +88,9 @@ Private Sub RedisWait(Optional ByVal Seconds As Long)
         DoEvents
     Wend
 End Sub
+
 '连接Redis并返回连接状态
-Private Function RedisConn(Optional ByVal Host As String, Optional ByVal Port As Long) As Long
+Public Function RedisConn(Optional ByVal Host As String, Optional ByVal Port As Long) As Long
     If Host <> "" Or Port > 0 Then
         If sckRedis.RemoteHost <> Host Or sckRedis.RemotePort <> Port Then 'IP或端口不同，要重新设置连接
             sckRedis.RemoteHost = Host
@@ -98,21 +107,21 @@ Private Function RedisConn(Optional ByVal Host As String, Optional ByVal Port As
 End Function
 
 '转换成通用Redis指令参数并执行
-Public Function RedisCommand(CMD As String, Key As String, Optional Value As String, Optional ByVal ParaCount As Long) As String
+Public Function RedisCommand(CMD As String, Key As String, Optional value As String, Optional ByVal ParaCount As Long) As String
     If CMD = "" Then Exit Function
     Dim tmp As String
     Cache = ""
     If RedisConn() = 7 Then
         Flag = CMD
         If ParaCount < 1 Then ' 自动判断参数有几个。
-            If Value <> "" Then ParaCount = 3 Else ParaCount = 2
+            If value <> "" Then ParaCount = 3 Else ParaCount = 2
         End If
         'sckRedis.SendData "set " & Key & " " & Value & vbCrLf '单行命令方式，内容要转义空格、换行符、引号等。
         '通用语法不需要转义特殊符号，要正确统计字节数：
         tmp = "*" & ParaCount & vbCrLf '声明参数总个数
         tmp = tmp & "$" & Len(CMD) & vbCrLf & CMD & vbCrLf '第一个参数（即命令）的长度及内容
         tmp = tmp & "$" & LenB(StrConv(Key, vbFromUnicode)) & vbCrLf & Key & vbCrLf '第二个参数（即变量名）的长度及内容
-        If ParaCount > 2 Then tmp = tmp & "$" & LenB(StrConv(Value, vbFromUnicode)) & vbCrLf & Value & vbCrLf '第三个参数（即变量值）的长度及内容
+        If ParaCount > 2 Then tmp = tmp & "$" & LenB(StrConv(value, vbFromUnicode)) & vbCrLf & value & vbCrLf '第三个参数（即变量值）的长度及内容
         'MsgBox tmp
         sckRedis.SendData tmp
         RedisWait Timeout '等待返回响应数据
@@ -133,8 +142,8 @@ Public Function GetS(ByVal Key As String) As String
 End Function
 
 '向Redis指定Key的变量写入数据
-Public Function SetS(ByVal Key As String, ByVal Value As String) As String
-    SetS = RedisCommand("SET", Key, Value, 3)
+Public Function SetS(ByVal Key As String, ByVal value As String) As String
+    SetS = RedisCommand("SET", Key, value, 3)
 End Function
 
 '取出Redis队列Key[]末尾一条数据
@@ -148,13 +157,13 @@ Public Function lPop(ByVal Key As String) As String
 End Function
 
 '向Redis队列Key[]开头插入一条数据
-Public Function lPush(ByVal Key As String, ByVal Value As String) As String
-    lPush = RedisCommand("LPUSH", Key, Value, 3)
+Public Function lPush(ByVal Key As String, ByVal value As String) As String
+    lPush = RedisCommand("LPUSH", Key, value, 3)
 End Function
 
 '向Redis队列Key[]末尾插入一条数据
-Public Function rPush(ByVal Key As String, ByVal Value As String) As String
-    rPush = RedisCommand("RPUSH", Key, Value, 3)
+Public Function rPush(ByVal Key As String, ByVal value As String) As String
+    rPush = RedisCommand("RPUSH", Key, value, 3)
 End Function
 
 
