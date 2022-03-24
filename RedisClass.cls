@@ -34,7 +34,7 @@ Private Sub Class_Initialize()  '创建类的实例时会执行
     On Error Resume Next
     Set sckRedis = New Winsock '工程“引用”mswinsck.ocx的情况下才能使用这句创建socket对象(兼容性不好，有些系统中会报错误429。好像修复VB6控件许可证问题后再编译就可以兼容本机，但还是不兼容其它主机，原因不明。)
     If Err.Number = 429 Then    '用set语句创建Winsock对象只适合工程“引用”mswinsck.ocx的情况，兼容性不好，易出错。
-    '    Set sckRedis = Form1.Winsock1 '把Winsock1对象拖到窗体上，代替工程引用对象的方式。
+    '   Set sckRedis = Form1.Winsock1 '把Winsock1对象拖到窗体上，代替工程引用对象的方式。
     End If
     sckRedis.RemotePort = 6379
     sckRedis.RemoteHost = "127.0.0.1"
@@ -49,6 +49,8 @@ End Sub
 '设置Redis服务器主机名/IP
 Public Property Let Host(ByVal strHost As String)
     If strHost <> "" Then
+        'If sckRedis Is Nothing Then Set sckRedis = New Winsock '尝试重建socket对象
+        If sckRedis.RemoteHost <> strHost Then sckRedis.Close  '要先断开连接才能变更
         sckRedis.RemoteHost = strHost
         If sckRedis.State <> 0 Then sckRedis.Close
     End If
@@ -60,6 +62,7 @@ End Property
 '设置Redis服务端口
 Public Property Let Port(ByVal intPort As Long)
     If intPort > 0 And intPort <= 65535 Then
+        If sckRedis.RemotePort <> intPort Then sckRedis.Close '要先断开连接才能变更
         sckRedis.RemotePort = intPort
         If sckRedis.State <> 0 Then sckRedis.Close
     End If
