@@ -50,8 +50,10 @@ End Sub
 Public Property Let Host(ByVal strHost As String)
     If strHost <> "" Then
         'If sckRedis Is Nothing Then Set sckRedis = New Winsock '尝试重建socket对象
-        If sckRedis.RemoteHost <> strHost Then sckRedis.Close  '要先断开连接才能变更
-        sckRedis.RemoteHost = strHost
+        If sckRedis.RemoteHost <> strHost Then
+            sckRedis.Close  '要先断开连接才能变更
+            sckRedis.RemoteHost = strHost
+        End If
         If sckRedis.State <> 0 Then sckRedis.Close
     End If
 End Property
@@ -93,18 +95,24 @@ Private Sub RedisWait(Optional ByVal Seconds As Long)
 End Sub
 
 '连接Redis并返回连接状态
-Public Function RedisConn(Optional ByVal Host As String, Optional ByVal Port As Long) As Long
+Public Function RedisConn(Optional ByVal Host As String, Optional ByVal Port As Long, Optional ByVal Pass As String) As Long
+    Dim tmp As String
     If Host <> "" Or Port > 0 Then
         If sckRedis.RemoteHost <> Host Or sckRedis.RemotePort <> Port Then 'IP或端口不同，要重新设置连接
+            sckRedis.Close
             sckRedis.RemoteHost = Host
             sckRedis.RemotePort = Port
-            sckRedis.Close
         End If
     End If
     If sckRedis.State = 0 Then
         sckRedis.Connect
         Flag = "con"
         RedisWait Timeout
+        '如果Redis需要密码，在此进行认证：
+        If Pass <> "" Then
+            tmp = "*2" & vbCrLf & "$4" & vbCrLf & "auth" & vbCrLf & "$" & LenB(StrConv(Pass, vbFromUnicode)) & vbCrLf & Pass & vbCrLf  '拼接认证指令和密码
+            sckRedis.SendData tmp
+        End If
     End If
     RedisConn = sckRedis.State
 End Function

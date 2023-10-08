@@ -1,6 +1,6 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
-Reference=*\G{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0#C:\Windows\SysWow64\mswinsck.ocx#Microsoft Winsock Control 6.0 (SP6)
+Reference=*\G{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0#F:\developVB\543VB\chat\mswinsck.ocx#Microsoft Winsock Control 6.0 (SP6)
 Form=Form1.frm
 Class=RedisClass; RedisClass.cls
 IconForm="Form1"
@@ -13,7 +13,7 @@ Name="Redis≤‚ ‘"
 HelpContextID="0"
 CompatibleMode="0"
 MajorVer=1
-MinorVer=1
+MinorVer=2
 RevisionVer=0
 AutoIncrementVer=0
 ServerSupportFiles=0

@@ -9,12 +9,21 @@ Begin VB.Form Form1
    ScaleHeight     =   4800
    ScaleWidth      =   6915
    StartUpPosition =   1  '所有者中心
+   Begin VB.TextBox txtPass 
+      Height          =   300
+      IMEMode         =   3  'DISABLE
+      Left            =   2160
+      PasswordChar    =   "*"
+      TabIndex        =   12
+      Top             =   480
+      Width           =   1455
+   End
    Begin VB.CommandButton btnConn 
       Caption         =   "连接Redis缓存服务"
       Height          =   375
-      Left            =   4440
+      Left            =   4560
       TabIndex        =   0
-      Top             =   120
+      Top             =   240
       Width           =   1815
    End
    Begin VB.TextBox txtPort 
@@ -75,12 +84,12 @@ Begin VB.Form Form1
       Width           =   1695
    End
    Begin VB.TextBox txtData 
-      Height          =   975
+      Height          =   735
       Left            =   120
       MultiLine       =   -1  'True
       TabIndex        =   3
       Text            =   "Form1.frx":001A
-      Top             =   600
+      Top             =   840
       Width           =   6735
    End
    Begin VB.CommandButton btnWrite 
@@ -90,6 +99,15 @@ Begin VB.Form Form1
       TabIndex        =   4
       Top             =   1680
       Width           =   1695
+   End
+   Begin VB.Label lblPass 
+      AutoSize        =   -1  'True
+      Caption         =   "密码(无密码请留空)："
+      Height          =   180
+      Left            =   120
+      TabIndex        =   11
+      Top             =   480
+      Width           =   1800
    End
    Begin VB.Label lblRedisServer 
       AutoSize        =   -1  'True
@@ -111,7 +129,7 @@ Dim R As RedisClass '声明自定义类的变量
 Private Sub btnConn_Click()
     R.Host = Trim(txtHost.Text)
     R.Port = Val(Trim(txtPort.Text))
-    txtData2.Text = Now() & " 连接状态：" & R.RedisConn() & vbCrLf & "（状态为7表示成功）"
+    txtData2.Text = Now() & " 连接状态：" & R.RedisConn(, , txtPass.Text) & vbCrLf & "（状态为7表示成功）"
 End Sub
 
 Private Sub btnPop_Click()
